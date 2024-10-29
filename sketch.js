@@ -19,6 +19,7 @@ let lastMoveTime = 0;
 let timerStarted = false; // タイマーが開始されたかどうか
 let playerMoved = false; // プレイヤーが移動したかどうかのフラグ
 let gameWon = false; // ゲームに勝ったかどうかのフラグ
+let endScreen = false; // ゲーム終了画面かどうかのフラグ
 
 function setup() {
   createCanvas(400, 450); // キャンバスの高さを少し大きくして、テキスト表示領域を作る
@@ -34,6 +35,9 @@ function draw() {
   } else if (gameWon) {
     // ゴールに到達した場合の処理
     displayWinScreen();
+  } else if (gameOver) {
+    // ゲームオーバーの場合の処理
+    displayGameOverScreen();
   } else {
     for (let i = 0; i < grid.length; i++) {
       grid[i].show();
@@ -99,7 +103,6 @@ function displayHUD() {
   fill(255);
   textSize(24);
   textAlign(LEFT, TOP);
-  text("スコア: " + score, 10, height - 50); // スコア表示を下部
   text("残り時間: " + timer, 200, height - 50); // タイマーも下部に配置
 }
 
@@ -305,6 +308,20 @@ function displayWinScreen() {
   restartButton.show();
 }
 
+function displayGameOverScreen() {
+  background(51);
+  fill(255);
+  textSize(32);
+  textAlign(CENTER, CENTER);
+  text("ゲームオーバー！", width / 2, height / 3);
+  
+  // やり直しボタンの表示
+  let restartButton = createButton("もう一度遊ぶ");
+  restartButton.position(width / 2 - 70, height / 2 + 50);
+  restartButton.mousePressed(() => restartGame());
+  restartButton.show();
+}
+
 function restartGame() {
   // 再スタートのための設定
   isStarted = false;
@@ -318,4 +335,28 @@ function restartGame() {
   for (let button of levelButtons) {
     button.show();
   }
+}
+
+function startGame(selectedLevel) {
+  level = selectedLevel;
+
+  // レベルによってキャンバスのサイズを変更
+  if (level === 1) {
+    cols = 10;
+    rows = 10;
+    maxTime = 60000; // 1分
+  } else if (level === 2) {
+    cols = 15;
+    rows = 15;
+    maxTime = 90000; // 1分30秒
+  } else if (level === 3) {
+    cols = 20;
+    rows = 20;
+    maxTime = 120000; // 2分
+  }
+  
+  w = width / cols; // セルの幅を設定
+  createGrid();
+  isStarted = true;
+  loop(); // 描画を再開
 }
