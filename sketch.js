@@ -31,6 +31,9 @@ function draw() {
   if (!isStarted) {
     // スタート画面とレベル選択
     showStartScreen();
+  } else if (gameWon) {
+    // ゴールに到達した場合の処理
+    displayWinScreen();
   } else {
     for (let i = 0; i < grid.length; i++) {
       grid[i].show();
@@ -50,7 +53,7 @@ function draw() {
     }
 
     player.show();
-    
+
     // プレイヤーの移動を遅くするために、タイマーに基づいて移動を制限
     if (!gameOver && millis() - lastMoveTime > playerMoveDelay) {
       playerMoved = player.move(); // プレイヤーの移動が行われたかを確認
@@ -87,15 +90,6 @@ function draw() {
         text("時間切れ！", width / 2, height / 2);
         noLoop();
       }
-    }
-
-    if (gameWon) {
-      fill(0, 255, 0);
-      textSize(32);
-      textAlign(CENTER, CENTER);
-      text("ゴールしました！", width / 2, height / 2 - 20); // ゴールメッセージを上にずらす
-      textSize(24);
-      text("スコア: " + score, width / 2, height / 2 + 20); // スコアを下に表示
     }
   }
 }
@@ -290,38 +284,40 @@ function showStartScreen() {
   text("迷路ゲーム", width / 2, height / 3);
   textSize(24);
   text("レベルを選んでください", width / 2, height / 2 - 40); // レベル選択のメッセージを上に移動
+
+  // ボタンを表示
+  for (let button of levelButtons) {
+    button.show();
+  }
 }
 
-function startGame(selectedLevel) {
-  level = selectedLevel;
-
-  if (level === 1) {
-    cols = 10;
-    rows = 10;
-    w = 40;
-    maxTime = 120 * 1000; // 120秒
-  } else if (level === 2) {
-    cols = 20;
-    rows = 20;
-    w = 20;
-    maxTime = 180 * 1000; // 180秒
-  } else if (level === 3) {
-    cols = 30;
-    rows = 30;
-    w = 15;
-    maxTime = 240 * 1000; // 240秒
-  }
-
-  resizeCanvas(cols * w, rows * w + 50); // キャンバスの高さを少し拡張してHUD用のスペースを確保
+function displayWinScreen() {
+  background(51);
+  fill(255);
+  textSize(32);
+  textAlign(CENTER, CENTER);
+  text("ゴールしました！", width / 2, height / 3);
+  textSize(24);
+  text("スコア: " + score, width / 2, height / 2);
   
-  // スタート画面の要素を非表示に
-  for (let button of levelButtons) {
-    button.hide();
-  }
+  // やり直しボタンの表示
+  let restartButton = createButton("もう一度遊ぶ");
+  restartButton.position(width / 2 - 70, height / 2 + 50);
+  restartButton.mousePressed(() => restartGame());
+  restartButton.show();
+}
 
-  createGrid();
-  isStarted = true;
+function restartGame() {
+  // 再スタートのための設定
+  isStarted = false;
   gameOver = false;
-  score = 0; // スコア初期化
-  loop();
+  gameWon = false;
+  timerStarted = false;
+  timer = 0;
+  score = 0;
+
+  // スタート画面の要素を表示
+  for (let button of levelButtons) {
+    button.show();
+  }
 }
