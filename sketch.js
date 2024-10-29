@@ -297,8 +297,6 @@ function displayWinScreen() {
   textSize(32);
   textAlign(CENTER, CENTER);
   text("ゴールしました！", width / 2, height / 3);
-  textSize(24);
-  text("スコア: " + score, width / 2, height / 2);
   
   // やり直しボタンの表示
   let restartButton = createButton("もう一度遊ぶ");
