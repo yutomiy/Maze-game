@@ -187,8 +187,24 @@ function startGame(selectedLevel) {
     rows = 20;
     maxTime = 120000;
   }
-  
+
   w = width / cols;
   createGrid();
+  current = grid[0];  // 迷路の開始位置を確実に設定
+  player = new Player(0, 0); // プレイヤーの初期化
+  goal = new Goal(cols - 1, rows - 1); // ゴールの初期化
+
   isStarted = true;
+  gameOver = false;
+  gameWon = false;
+  timerStarted = false;
+  timer = maxTime / 1000;
+
+  // レベル選択ボタンを非表示にする
+  for (let button of levelButtons) {
+    button.hide();
+  }
+
+  loop(); // ゲームの描画を再開
 }
+
