@@ -14,29 +14,25 @@ let isStarted = false;
 let levelButtons = [];
 let score = 0;
 let lives = 3;
-let playerMoveDelay = 250; // プレイヤーの移動速度調整 (250ミリ秒ごとに移動)
+let playerMoveDelay = 250;
 let lastMoveTime = 0;
-let timerStarted = false; // タイマーが開始されたかどうか
-let playerMoved = false; // プレイヤーが移動したかどうかのフラグ
-let gameWon = false; // ゲームに勝ったかどうかのフラグ
-let endScreen = false; // ゲーム終了画面かどうかのフラグ
+let timerStarted = false;
+let playerMoved = false;
+let gameWon = false;
 
 function setup() {
-  createCanvas(400, 450); // キャンバスの高さを少し大きくして、テキスト表示領域を作る
+  createCanvas(400, 450);
   createLevelButtons();
 }
 
 function draw() {
   background(51);
-  
+
   if (!isStarted) {
-    // スタート画面とレベル選択
     showStartScreen();
   } else if (gameWon) {
-    // ゴールに到達した場合の処理
     displayWinScreen();
   } else if (gameOver) {
-    // ゲームオーバーの場合の処理
     displayGameOverScreen();
   } else {
     for (let i = 0; i < grid.length; i++) {
@@ -58,12 +54,10 @@ function draw() {
 
     player.show();
 
-    // プレイヤーの移動を遅くするために、タイマーに基づいて移動を制限
     if (!gameOver && millis() - lastMoveTime > playerMoveDelay) {
-      playerMoved = player.move(); // プレイヤーの移動が行われたかを確認
-      lastMoveTime = millis(); // 最後の移動タイムスタンプを更新
+      playerMoved = player.move();
+      lastMoveTime = millis();
 
-      // プレイヤーが動き始めたらタイマーをスタート
       if (playerMoved && !timerStarted) {
         startTime = millis();
         timerStarted = true;
@@ -72,19 +66,16 @@ function draw() {
 
     goal.show();
 
-    // ゴールに到達
     if (player.i === goal.i && player.j === goal.j) {
-      gameWon = true; // ゲームに勝ったフラグを立てる
+      gameWon = true;
       gameOver = true;
-      noLoop(); // 描画を停止
+      noLoop();
     }
 
     if (timerStarted) {
-      // タイマー表示
       let currentTime = millis() - startTime;
       timer = floor((maxTime - currentTime) / 1000);
-
-      displayHUD(); // HUD（スコアやタイマー）をキャンバスの外に表示
+      displayHUD();
 
       if (timer <= 0 && !gameOver) {
         gameOver = true;
@@ -99,11 +90,10 @@ function draw() {
 }
 
 function displayHUD() {
-  // スコアとタイマーを表示（キャンバスの上部、迷路に被らない）
   fill(255);
   textSize(24);
   textAlign(LEFT, TOP);
-  text("残り時間: " + timer, 200, height - 50); // タイマーも下部に配置
+  text("残り時間: " + timer, 200, height - 50);
 }
 
 function createGrid() {
@@ -146,134 +136,73 @@ function removeWalls(a, b) {
   }
 }
 
-class Cell {
-  constructor(i, j) {
-    this.i = i;
-    this.j = j;
-    this.walls = [true, true, true, true]; // 上、右、下、左の壁
-    this.visited = false;
-  }
+function displayWinScreen() {
+  background(51);
+  fill(255);
+  textSize(32);
+  textAlign(CENTER, CENTER);
+  text("ゴールしました！", width / 2, height / 3);
 
-  checkNeighbors() {
-    let neighbors = [];
+  let restartButton = createButton("もう一度遊ぶ");
+  let homeButton = createButton("ホームに戻る");
 
-    let top = grid[index(this.i, this.j - 1)];
-    let right = grid[index(this.i + 1, this.j)];
-    let bottom = grid[index(this.i, this.j + 1)];
-    let left = grid[index(this.i - 1, this.j)];
+  restartButton.position(width / 2 - 70, height / 2 + 20);
+  homeButton.position(width / 2 - 70, height / 2 + 60);
 
-    if (top && !top.visited) {
-      neighbors.push(top);
-    }
-    if (right && !right.visited) {
-      neighbors.push(right);
-    }
-    if (bottom && !bottom.visited) {
-      neighbors.push(bottom);
-    }
-    if (left && !left.visited) {
-      neighbors.push(left);
-    }
+  restartButton.mousePressed(() => {
+    restartButton.remove();
+    homeButton.remove();
+    restartGame();
+  });
 
-    if (neighbors.length > 0) {
-      let r = floor(random(0, neighbors.length));
-      return neighbors[r];
-    } else {
-      return undefined;
-    }
-  }
-
-  highlight() {
-    let x = this.i * w;
-    let y = this.j * w;
-    noStroke();
-    fill(0, 255, 0, 100);
-    rect(x, y, w, w);
-  }
-
-  show() {
-    let x = this.i * w;
-    let y = this.j * w;
-    stroke(255);
-    if (this.walls[0]) {
-      line(x, y, x + w, y);
-    }
-    if (this.walls[1]) {
-      line(x + w, y, x + w, y + w);
-    }
-    if (this.walls[2]) {
-      line(x + w, y + w, x, y + w);
-    }
-    if (this.walls[3]) {
-      line(x, y + w, x, y);
-    }
-
-    if (this.visited) {
-      noStroke();
-      fill(255, 0, 255, 100);
-      rect(x, y, w, w);
-    }
-  }
+  homeButton.mousePressed(() => {
+    restartButton.remove();
+    homeButton.remove();
+    goHome();
+  });
 }
 
-class Player {
-  constructor(i, j) {
-    this.i = i;
-    this.j = j;
-  }
+function displayGameOverScreen() {
+  background(51);
+  fill(255);
+  textSize(32);
+  textAlign(CENTER, CENTER);
+  text("ゲームオーバー！", width / 2, height / 3);
 
-  move() {
-    let moved = false;
-    if (keyIsDown(UP_ARROW) && !grid[index(this.i, this.j)].walls[0]) {
-      this.j--;
-      moved = true;
-    }
-    if (keyIsDown(RIGHT_ARROW) && !grid[index(this.i, this.j)].walls[1]) {
-      this.i++;
-      moved = true;
-    }
-    if (keyIsDown(DOWN_ARROW) && !grid[index(this.i, this.j)].walls[2]) {
-      this.j++;
-      moved = true;
-    }
-    if (keyIsDown(LEFT_ARROW) && !grid[index(this.i, this.j)].walls[3]) {
-      this.i--;
-      moved = true;
-    }
-    return moved; // 移動が行われたかを返す
-  }
-
-  show() {
-    fill(0, 0, 255);
-    noStroke();
-    rect(this.i * w, this.j * w, w, w);
-  }
+  let restartButton = createButton("もう一度遊ぶ");
+  restartButton.position(width / 2 - 70, height / 2 + 50);
+  restartButton.mousePressed(() => {
+    restartButton.remove();
+    restartGame();
+  });
 }
 
-class Goal {
-  constructor(i, j) {
-    this.i = i;
-    this.j = j;
-  }
+function goHome() {
+  isStarted = false;
+  gameWon = false;
+  gameOver = false;
+  timerStarted = false;
+  score = 0;
+  
+  grid = [];
+  noLoop();
 
-  show() {
-    fill(255, 0, 0);
-    noStroke();
-    rect(this.i * w, this.j * w, w, w);
+  for (let button of levelButtons) {
+    button.show();
   }
 }
 
 function createLevelButtons() {
   let easyButton = createButton("イージー");
-  easyButton.position(width / 2 - 50, height / 2);
-  easyButton.mousePressed(() => startGame(1));
-
   let mediumButton = createButton("ミディアム");
-  mediumButton.position(width / 2 - 50, height / 2 + 50);
-  mediumButton.mousePressed(() => startGame(2));
-
   let hardButton = createButton("ハード");
+
+  easyButton.position(width / 2 - 50, height / 2);
+  mediumButton.position(width / 2 - 50, height / 2 + 50);
   hardButton.position(width / 2 - 50, height / 2 + 100);
+
+  easyButton.mousePressed(() => startGame(1));
+  mediumButton.mousePressed(() => startGame(2));
   hardButton.mousePressed(() => startGame(3));
 
   levelButtons.push(easyButton, mediumButton, hardButton);
@@ -286,74 +215,8 @@ function showStartScreen() {
   textAlign(CENTER, CENTER);
   text("迷路ゲーム", width / 2, height / 3);
   textSize(24);
-  text("レベルを選んでください", width / 2, height / 2 - 40); // レベル選択のメッセージを上に移動
+  text("レベルを選んでください", width / 2, height / 2 - 40);
 
-  // ボタンを表示
-  for (let button of levelButtons) {
-    button.show();
-  }
-}
-
-function displayWinScreen() {
-  background(51);
-  fill(255);
-  textSize(32);
-  textAlign(CENTER, CENTER);
-  text("ゴールしました！", width / 2, height / 3);
-  
-  // 「もう一度遊ぶ」ボタン
-  let restartButton = createButton("もう一度遊ぶ");
-  restartButton.position(width / 2 - 70, height / 2 + 20);
-  restartButton.mousePressed(() => {
-    restartButton.remove();
-    homeButton.remove(); // 「ホームに戻る」ボタンも削除
-    restartGame();
-  });
-
-  // 「ホームに戻る」ボタンを追加
-  let homeButton = createButton("ホームに戻る");
-  homeButton.position(width / 2 - 70, height / 2 + 60);
-  homeButton.mousePressed(() => {
-    restartButton.remove();
-    homeButton.remove();
-    goHome();
-  });
-}
-
-
-function displayGameOverScreen() {
-  background(51);
-  fill(255);
-  textSize(32);
-  textAlign(CENTER, CENTER);
-  text("ゲームオーバー！", width / 2, height / 3);
-  
-  // やり直しボタンの表示
-  let restartButton = createButton("もう一度遊ぶ");
-  restartButton.position(width / 2 - 70, height / 2 + 50);
-  restartButton.mousePressed(() => restartGame());
-  restartButton.show();
-}
-
-function goHome() {
-  isStarted = false;
-  gameWon = false;
-  gameOver = false;
-  timerStarted = false;
-  score = 0;
-  
-  // 迷路をクリア
-  grid = [];
-  
-  // レベル選択ボタンを再表示
-  for (let button of levelButtons) {
-    button.show();
-  }
-  
-  loop(); // スタート画面を再描画
-}
-
-  // スタート画面の要素を表示
   for (let button of levelButtons) {
     button.show();
   }
@@ -362,23 +225,22 @@ function goHome() {
 function startGame(selectedLevel) {
   level = selectedLevel;
 
-  // レベルによってキャンバスのサイズを変更
   if (level === 1) {
     cols = 10;
     rows = 10;
-    maxTime = 60000; // 1分
+    maxTime = 60000;
   } else if (level === 2) {
     cols = 15;
     rows = 15;
-    maxTime = 90000; // 1分30秒
+    maxTime = 90000;
   } else if (level === 3) {
     cols = 20;
     rows = 20;
-    maxTime = 120000; // 2分
+    maxTime = 120000;
   }
-  
-  w = width / cols; // セルの幅を設定
+
+  w = width / cols;
   createGrid();
   isStarted = true;
-  loop(); // 描画を再開
+  loop();
 }
