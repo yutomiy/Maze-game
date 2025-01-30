@@ -301,12 +301,25 @@ function displayWinScreen() {
   textAlign(CENTER, CENTER);
   text("ゴールしました！", width / 2, height / 3);
   
-  // やり直しボタンの表示
+  // 「もう一度遊ぶ」ボタン
   let restartButton = createButton("もう一度遊ぶ");
-  restartButton.position(width / 2 - 70, height / 2 + 50);
-  restartButton.mousePressed(() => restartGame());
-  restartButton.show();
+  restartButton.position(width / 2 - 70, height / 2 + 20);
+  restartButton.mousePressed(() => {
+    restartButton.remove();
+    homeButton.remove(); // 「ホームに戻る」ボタンも削除
+    restartGame();
+  });
+
+  // 「ホームに戻る」ボタンを追加
+  let homeButton = createButton("ホームに戻る");
+  homeButton.position(width / 2 - 70, height / 2 + 60);
+  homeButton.mousePressed(() => {
+    restartButton.remove();
+    homeButton.remove();
+    goHome();
+  });
 }
+
 
 function displayGameOverScreen() {
   background(51);
@@ -322,14 +335,23 @@ function displayGameOverScreen() {
   restartButton.show();
 }
 
-function restartGame() {
-  // 再スタートのための設定
+function goHome() {
   isStarted = false;
-  gameOver = false;
   gameWon = false;
+  gameOver = false;
   timerStarted = false;
-  timer = 0;
   score = 0;
+  
+  // 迷路をクリア
+  grid = [];
+  
+  // レベル選択ボタンを再表示
+  for (let button of levelButtons) {
+    button.show();
+  }
+  
+  loop(); // スタート画面を再描画
+}
 
   // スタート画面の要素を表示
   for (let button of levelButtons) {
