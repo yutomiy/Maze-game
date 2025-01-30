@@ -19,6 +19,7 @@ let lastMoveTime = 0;
 let timerStarted = false;
 let playerMoved = false;
 let gameWon = false;
+let restartButton; // ホームに戻るボタン用のグローバル変数
 
 function setup() {
   createCanvas(400, 450);
@@ -27,7 +28,7 @@ function setup() {
 
 function draw() {
   background(51);
-
+  
   if (!isStarted) {
     showStartScreen();
   } else if (gameWon) {
@@ -57,7 +58,6 @@ function draw() {
     if (!gameOver && millis() - lastMoveTime > playerMoveDelay) {
       playerMoved = player.move();
       lastMoveTime = millis();
-
       if (playerMoved && !timerStarted) {
         startTime = millis();
         timerStarted = true;
@@ -69,21 +69,18 @@ function draw() {
     if (player.i === goal.i && player.j === goal.j) {
       gameWon = true;
       gameOver = true;
-      noLoop();
     }
 
     if (timerStarted) {
       let currentTime = millis() - startTime;
       timer = floor((maxTime - currentTime) / 1000);
       displayHUD();
-
       if (timer <= 0 && !gameOver) {
         gameOver = true;
         fill(255, 0, 0);
         textSize(32);
         textAlign(CENTER, CENTER);
         text("時間切れ！", width / 2, height / 2);
-        noLoop();
       }
     }
   }
@@ -96,46 +93,6 @@ function displayHUD() {
   text("残り時間: " + timer, 200, height - 50);
 }
 
-function createGrid() {
-  grid = [];
-  for (let j = 0; j < rows; j++) {
-    for (let i = 0; i < cols; i++) {
-      let cell = new Cell(i, j);
-      grid.push(cell);
-    }
-  }
-  current = grid[0];
-  player = new Player(0, 0);
-  goal = new Goal(cols - 1, rows - 1);
-}
-
-function index(i, j) {
-  if (i < 0 || j < 0 || i > cols - 1 || j > rows - 1) {
-    return -1;
-  }
-  return i + j * cols;
-}
-
-function removeWalls(a, b) {
-  let x = a.i - b.i;
-  if (x === 1) {
-    a.walls[3] = false;
-    b.walls[1] = false;
-  } else if (x === -1) {
-    a.walls[1] = false;
-    b.walls[3] = false;
-  }
-
-  let y = a.j - b.j;
-  if (y === 1) {
-    a.walls[0] = false;
-    b.walls[2] = false;
-  } else if (y === -1) {
-    a.walls[2] = false;
-    b.walls[0] = false;
-  }
-}
-
 function displayWinScreen() {
   background(51);
   fill(255);
@@ -143,23 +100,12 @@ function displayWinScreen() {
   textAlign(CENTER, CENTER);
   text("ゴールしました！", width / 2, height / 3);
 
-  let restartButton = createButton("もう一度遊ぶ");
-  let homeButton = createButton("ホームに戻る");
-
-  restartButton.position(width / 2 - 70, height / 2 + 20);
-  homeButton.position(width / 2 - 70, height / 2 + 60);
-
-  restartButton.mousePressed(() => {
+  if (restartButton) {
     restartButton.remove();
-    homeButton.remove();
-    restartGame();
-  });
-
-  homeButton.mousePressed(() => {
-    restartButton.remove();
-    homeButton.remove();
-    goHome();
-  });
+  }
+  restartButton = createButton("ホームに戻る");
+  restartButton.position(width / 2 - 70, height / 2 + 50);
+  restartButton.mousePressed(() => restartGame());
 }
 
 function displayGameOverScreen() {
@@ -169,23 +115,26 @@ function displayGameOverScreen() {
   textAlign(CENTER, CENTER);
   text("ゲームオーバー！", width / 2, height / 3);
 
-  let restartButton = createButton("もう一度遊ぶ");
-  restartButton.position(width / 2 - 70, height / 2 + 50);
-  restartButton.mousePressed(() => {
+  if (restartButton) {
     restartButton.remove();
-    restartGame();
-  });
+  }
+  restartButton = createButton("ホームに戻る");
+  restartButton.position(width / 2 - 70, height / 2 + 50);
+  restartButton.mousePressed(() => restartGame());
 }
 
-function goHome() {
+function restartGame() {
   isStarted = false;
-  gameWon = false;
   gameOver = false;
+  gameWon = false;
   timerStarted = false;
+  timer = 0;
   score = 0;
-  
-  grid = [];
-  noLoop();
+
+  if (restartButton) {
+    restartButton.remove();
+    restartButton = null;
+  }
 
   for (let button of levelButtons) {
     button.show();
@@ -194,15 +143,15 @@ function goHome() {
 
 function createLevelButtons() {
   let easyButton = createButton("イージー");
-  let mediumButton = createButton("ミディアム");
-  let hardButton = createButton("ハード");
-
   easyButton.position(width / 2 - 50, height / 2);
-  mediumButton.position(width / 2 - 50, height / 2 + 50);
-  hardButton.position(width / 2 - 50, height / 2 + 100);
-
   easyButton.mousePressed(() => startGame(1));
+
+  let mediumButton = createButton("ミディアム");
+  mediumButton.position(width / 2 - 50, height / 2 + 50);
   mediumButton.mousePressed(() => startGame(2));
+
+  let hardButton = createButton("ハード");
+  hardButton.position(width / 2 - 50, height / 2 + 100);
   hardButton.mousePressed(() => startGame(3));
 
   levelButtons.push(easyButton, mediumButton, hardButton);
@@ -238,9 +187,8 @@ function startGame(selectedLevel) {
     rows = 20;
     maxTime = 120000;
   }
-
+  
   w = width / cols;
   createGrid();
   isStarted = true;
-  loop();
 }
